@@ -31,3 +31,5 @@ sed -i '' "s/{{user}}/$username/g" $CLOUDINIT
 
 SSHPUBKEY=$(<$sshPublicKeyPath)
 sed -i '' "s|{{sshPublicKey}}|$SSHPUBKEY|g" $CLOUDINIT
+
+echo "done!"
