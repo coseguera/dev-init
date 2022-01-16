@@ -19,6 +19,7 @@ echo "Source cloud-init: $sourceCloudInit"
 BASEDIR=$(dirname "$0")
 OUTDIR=$BASEDIR/out
 CLOUDINIT=$OUTDIR/cloud-init.config
+ARMTEMPLATE=$OUTDIR/vm.template.json
 
 mkdir -p $OUTDIR
 
@@ -40,5 +41,14 @@ do
     BASE64CONTENT=$(base64 $f)
     sed -i '' "s|{{$FILENAME}}|$BASE64CONTENT|g" $CLOUDINIT
 done
+
+echo "copying vm.template.json to $ARMTEMPLATE to replace values"
+cp $BASEDIR/templates/vm.template.json $ARMTEMPLATE
+
+echo "placing the cloud init content in the target ARM template."
+awk 1 ORS='\\n' $CLOUDINIT > $OUTDIR/ONELINECLOUDINIT
+awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/cloud-init-content/,rep)}1' $OUTDIR/ONELINECLOUDINIT $ARMTEMPLATE > $OUTDIR/TMP
+mv $OUTDIR/TMP $ARMTEMPLATE
+rm $OUTDIR/ONELINECLOUDINIT
 
 echo "done!"
