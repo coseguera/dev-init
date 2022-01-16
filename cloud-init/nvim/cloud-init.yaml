@@ -1,0 +1,18 @@
+#cloud-config
+users:
+  - name: {{user}}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - {{sshPublicKey}}
+
+write_files:
+  - content: |
+      {{install-nvim.sh}}
+    encoding: b64
+    owner: root
+    path: /var/devsetup/install-nvim.sh
+    permissions: '0755'
+
+runcmd:
+  - [runuser, -l, {{user}}, -c, '/var/devsetup/install-nvim.sh']
