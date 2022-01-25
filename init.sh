@@ -9,7 +9,10 @@ save_cloud_init() {
     local ssh_public_key_path="$2"
     local scripts_dir_path="$3"
     local source_cloud_init="$4"
-    local target_cloud_init="$5"
+    local target_path="$5"
+
+    local target_cloud_init="$target_path/$(basename $source_cloud_init)"
+
     echo "copying $source_cloud_init to $target_cloud_init to replace values"
     cp $source_cloud_init $target_cloud_init
 
@@ -59,12 +62,12 @@ echo "Source cloud-init: $sourceCloudInit"
 
 BASEDIR=$(dirname "$0")
 OUTDIR=$BASEDIR/out
-CLOUDINIT=$OUTDIR/cloud-init.config
+CLOUDINIT=$OUTDIR/cloud-init.yaml
 ARMTEMPLATE=$BASEDIR/templates/vm.template.json
 
 mkdir -p $OUTDIR
 
-save_cloud_init $username $sshPublicKeyPath $BASEDIR/scripts/ $sourceCloudInit $CLOUDINIT
+save_cloud_init $username $sshPublicKeyPath $BASEDIR/scripts/ $sourceCloudInit $OUTDIR
 save_arm_template $ARMTEMPLATE $CLOUDINIT $OUTDIR
 
 echo "done!"
