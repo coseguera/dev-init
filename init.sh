@@ -5,22 +5,27 @@ set -o nounset
 set -o pipefail
 
 save_cloud_init() {
-    echo "copying cloud-init.yaml to $CLOUDINIT to replace values"
-    cp $sourceCloudInit $CLOUDINIT
+    local username="$1"
+    local ssh_public_key_path="$2"
+    local scripts_dir_path="$3"
+    local source_cloud_init="$4"
+    local target_cloud_init="$5"
+    echo "copying $source_cloud_init to $target_cloud_init to replace values"
+    cp $source_cloud_init $target_cloud_init
 
-    echo "replacing values in cloud-init.config"
+    echo "replacing values in file"
 
-    sed -i '' "s/{{user}}/$username/g" $CLOUDINIT
+    sed -i '' "s/{{user}}/$username/g" $target_cloud_init
 
-    SSHPUBKEY=$(<$sshPublicKeyPath)
-    sed -i '' "s|{{sshPublicKey}}|$SSHPUBKEY|g" $CLOUDINIT
+    SSHPUBKEY=$(<$ssh_public_key_path)
+    sed -i '' "s|{{sshPublicKey}}|$SSHPUBKEY|g" $target_cloud_init
 
-    FILES="$BASEDIR/scripts/*"
+    FILES="$scripts_dir_path/*"
     for f in $FILES; do
         echo "replacing $f file if found in cloud-init..."
         FILENAME=$(basename $f)
         BASE64CONTENT=$(base64 $f)
-        sed -i '' "s|{{$FILENAME}}|$BASE64CONTENT|g" $CLOUDINIT
+        sed -i '' "s|{{$FILENAME}}|$BASE64CONTENT|g" $target_cloud_init
     done
 }
 
@@ -59,7 +64,7 @@ ARMTEMPLATE=$BASEDIR/templates/vm.template.json
 
 mkdir -p $OUTDIR
 
-save_cloud_init
+save_cloud_init $username $sshPublicKeyPath $BASEDIR/scripts/ $sourceCloudInit $CLOUDINIT
 save_arm_template $ARMTEMPLATE $CLOUDINIT $OUTDIR
 
 echo "done!"
