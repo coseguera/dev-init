@@ -58,12 +58,27 @@ save_cloud_init() {
     fi
 }
 
-while getopts u:k:c:t:s:o: flag; do
+save_dockerfile() {
+    local dockerfile_path="$1"
+    local scripts_dir_path="$2"
+    local target_path="$3"
+
+    local target_dockerfile_path="$target_path/$(basename $dockerfile_path)"
+
+    echo "copying $dockerfile_path to $target_dockerfile_path."
+    cp $dockerfile_path $target_dockerfile_path
+    
+    echo "copying $scripts_dir_path to $target_path/scripts"
+    cp -R $scripts_dir_path $target_path/scripts
+}
+
+while getopts u:k:c:t:d:s:o: flag; do
     case "${flag}" in
     u) username=${OPTARG} ;;
     k) sshPublicKeyPath=${OPTARG} ;;
     c) source_cloud_init=${OPTARG} ;;
     t) arm_template_path=${OPTARG} ;;
+    d) dockerfile_path=${OPTARG} ;;
     s) scripts_dir_path=${OPTARG} ;;
     o) target_path=${OPTARG} ;;
     esac
@@ -77,6 +92,11 @@ mkdir -p $target_path
 if [ -n "$source_cloud_init" ]; then
     echo "Generating cloud-init."
     save_cloud_init $username $sshPublicKeyPath $source_cloud_init $scripts_dir_path $target_path
+fi
+
+if [ -n "$dockerfile_path" ]; then
+    echo "Generating Dockerfile."
+    save_dockerfile $dockerfile_path $scripts_dir_path $target_path
 fi
 
 echo "done!"
