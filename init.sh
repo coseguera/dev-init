@@ -4,6 +4,23 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+save_arm_template() {
+    local source_template_path="$1"
+    local cloud_init_path="$2"
+    local target_path="$3"
+    
+    local target_template_path="$target_path/$(basename $source_template_path)"
+
+    echo "copying $source_template_path to $target_template_path to replace values"
+    cp $source_template_path $target_template_path
+
+    echo "placing the cloud init content in the target ARM template."
+    awk 1 ORS='\\n' $cloud_init_path >$target_path/ONELINECLOUDINIT
+    awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/cloud-init-content/,rep)}1' $target_path/ONELINECLOUDINIT $target_template_path >$target_path/TMP
+    mv $target_path/TMP $target_template_path
+    rm $target_path/ONELINECLOUDINIT
+}
+
 save_cloud_init() {
     local username="$1"
     local ssh_public_key_path="$2"
@@ -30,23 +47,6 @@ save_cloud_init() {
         BASE64CONTENT=$(base64 $f)
         sed -i '' "s|{{$FILENAME}}|$BASE64CONTENT|g" $target_cloud_init
     done
-}
-
-save_arm_template() {
-    local source_template_path="$1"
-    local cloud_init_path="$2"
-    local target_path="$3"
-    
-    local target_template_path="$target_path/$(basename $source_template_path)"
-
-    echo "copying $source_template_path to $target_template_path to replace values"
-    cp $source_template_path $target_template_path
-
-    echo "placing the cloud init content in the target ARM template."
-    awk 1 ORS='\\n' $cloud_init_path >$target_path/ONELINECLOUDINIT
-    awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/cloud-init-content/,rep)}1' $target_path/ONELINECLOUDINIT $target_template_path >$target_path/TMP
-    mv $target_path/TMP $target_template_path
-    rm $target_path/ONELINECLOUDINIT
 }
 
 while getopts u:k:f: flag; do
