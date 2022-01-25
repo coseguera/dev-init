@@ -25,14 +25,20 @@ save_cloud_init() {
 }
 
 save_arm_template() {
-    echo "copying vm.template.json to $ARMTEMPLATE to replace values"
-    cp $BASEDIR/templates/vm.template.json $ARMTEMPLATE
+    local source_template_path="$1"
+    local cloud_init_path="$2"
+    local target_path="$3"
+    
+    local target_template_path="$target_path/$(basename $source_template_path)"
+
+    echo "copying $source_template_path to $target_template_path to replace values"
+    cp $source_template_path $target_template_path
 
     echo "placing the cloud init content in the target ARM template."
-    awk 1 ORS='\\n' $CLOUDINIT >$OUTDIR/ONELINECLOUDINIT
-    awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/cloud-init-content/,rep)}1' $OUTDIR/ONELINECLOUDINIT $ARMTEMPLATE >$OUTDIR/TMP
-    mv $OUTDIR/TMP $ARMTEMPLATE
-    rm $OUTDIR/ONELINECLOUDINIT
+    awk 1 ORS='\\n' $cloud_init_path >$target_path/ONELINECLOUDINIT
+    awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/cloud-init-content/,rep)}1' $target_path/ONELINECLOUDINIT $target_template_path >$target_path/TMP
+    mv $target_path/TMP $target_template_path
+    rm $target_path/ONELINECLOUDINIT
 }
 
 while getopts u:k:f: flag; do
@@ -49,11 +55,11 @@ echo "Source cloud-init: $sourceCloudInit"
 BASEDIR=$(dirname "$0")
 OUTDIR=$BASEDIR/out
 CLOUDINIT=$OUTDIR/cloud-init.config
-ARMTEMPLATE=$OUTDIR/vm.template.json
+ARMTEMPLATE=$BASEDIR/templates/vm.template.json
 
 mkdir -p $OUTDIR
 
 save_cloud_init
-save_arm_template
+save_arm_template $ARMTEMPLATE $CLOUDINIT $OUTDIR
 
 echo "done!"
