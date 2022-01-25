@@ -1,14 +1,13 @@
 #!/bin/bash
 
 set -o errexit
-set -o nounset
 set -o pipefail
 
 save_arm_template() {
     local source_template_path="$1"
     local cloud_init_path="$2"
     local target_path="$3"
-    
+
     local target_template_path="$target_path/$(basename $source_template_path)"
 
     echo "copying $source_template_path to $target_template_path to replace values"
@@ -24,14 +23,18 @@ save_arm_template() {
 save_cloud_init() {
     local username="$1"
     local ssh_public_key_path="$2"
-    local scripts_dir_path="$3"
-    local source_cloud_init="$4"
+    local source_cloud_init="$3"
+    local scripts_dir_path="$4"
     local target_path="$5"
 
     local target_cloud_init="$target_path/$(basename $source_cloud_init)"
 
     echo "copying $source_cloud_init to $target_cloud_init to replace values"
     cp $source_cloud_init $target_cloud_init
+
+    echo "Username: $username"
+    echo "SSH Key path: $ssh_public_key_path"
+    echo "Source cloud-init: $source_cloud_init"
 
     echo "replacing values in file"
 
@@ -47,27 +50,33 @@ save_cloud_init() {
         BASE64CONTENT=$(base64 $f)
         sed -i '' "s|{{$FILENAME}}|$BASE64CONTENT|g" $target_cloud_init
     done
+
+    if [ -n "$arm_template_path" ]; then
+        echo "Generating ARM template."
+        echo "ARM template path: $arm_template_path"
+        save_arm_template $arm_template_path $target_cloud_init $target_path
+    fi
 }
 
-while getopts u:k:f: flag; do
+while getopts u:k:f:t:s:o: flag; do
     case "${flag}" in
     u) username=${OPTARG} ;;
     k) sshPublicKeyPath=${OPTARG} ;;
-    f) sourceCloudInit=${OPTARG} ;;
+    f) source_cloud_init=${OPTARG} ;;
+    t) arm_template_path=${OPTARG} ;;
+    s) scripts_dir_path=${OPTARG} ;;
+    o) target_path=${OPTARG} ;;
     esac
 done
-echo "Username: $username"
-echo "SSH Key path: $sshPublicKeyPath"
-echo "Source cloud-init: $sourceCloudInit"
 
-BASEDIR=$(dirname "$0")
-OUTDIR=$BASEDIR/out
-CLOUDINIT=$OUTDIR/cloud-init.yaml
-ARMTEMPLATE=$BASEDIR/templates/vm.template.json
+echo "Scripts directory path: $scripts_dir_path"
+echo "Target path: $target_path"
 
-mkdir -p $OUTDIR
+mkdir -p $target_path
 
-save_cloud_init $username $sshPublicKeyPath $BASEDIR/scripts/ $sourceCloudInit $OUTDIR
-save_arm_template $ARMTEMPLATE $CLOUDINIT $OUTDIR
+if [ -n "$source_cloud_init" ]; then
+    echo "Generating cloud-init."
+    save_cloud_init $username $sshPublicKeyPath $source_cloud_init $scripts_dir_path $target_path
+fi
 
 echo "done!"
