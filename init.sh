@@ -58,11 +58,11 @@ save_cloud_init() {
     fi
 }
 
-while getopts u:k:f:t:s:o: flag; do
+while getopts u:k:c:t:s:o: flag; do
     case "${flag}" in
     u) username=${OPTARG} ;;
     k) sshPublicKeyPath=${OPTARG} ;;
-    f) source_cloud_init=${OPTARG} ;;
+    c) source_cloud_init=${OPTARG} ;;
     t) arm_template_path=${OPTARG} ;;
     s) scripts_dir_path=${OPTARG} ;;
     o) target_path=${OPTARG} ;;
