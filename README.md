@@ -12,8 +12,3 @@ Create development virtual machines easily
 ```
 ./init.sh -u <username> -k <path-to-ssh-public-key> -f <path-to-cloud-init> -t <path-to-arm-template> -s <path-to-scripts-directory> -o <path-to-output-directory>
 ```
-
-### To generate a Dockerfile
-```
-./init.sh -d <path-to-dockerfile> -s <path-to-scripts-directory> -o <path-to-output-directory>
-```
