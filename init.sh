@@ -47,7 +47,7 @@ save_cloud_init() {
     for f in $FILES; do
         echo "replacing $f file if found in cloud-init..."
         FILENAME=$(basename $f)
-        BASE64CONTENT=$(base64 $f)
+        BASE64CONTENT=$(base64 -i $f)
         sed -i '' "s|{{$FILENAME}}|$BASE64CONTENT|g" $target_cloud_init
     done
 
