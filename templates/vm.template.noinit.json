@@ -36,12 +36,10 @@
           {
             "name": "SSH",
             "properties": {
-              "protocol": "Tcp",
+              "protocol": "TCP",
               "sourcePortRange": "*",
               "destinationPortRange": "22",
-              "sourceAddressPrefixes": [
-                "[parameters('userPublicIp')]"
-              ],
+              "sourceAddressPrefix": "[parameters('userPublicIp')]",
               "destinationAddressPrefix": "*",
               "access": "Allow",
               "priority": 100,
